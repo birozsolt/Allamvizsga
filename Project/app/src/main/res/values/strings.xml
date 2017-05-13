@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">CardRecognizer</string>
+    <string name="description">The recognized string</string>
+</resources>
