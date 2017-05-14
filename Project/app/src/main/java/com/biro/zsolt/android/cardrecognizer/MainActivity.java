@@ -1,5 +1,8 @@
 package com.biro.zsolt.android.cardrecognizer;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.hardware.camera2.*;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.SurfaceView;
@@ -15,10 +18,16 @@ import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
 import org.opencv.android.JavaCameraView;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
+import org.opencv.android.Utils;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.highgui.Highgui;
 import org.opencv.imgproc.Imgproc;
+
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 
 public class MainActivity extends AppCompatActivity implements CvCameraViewListener2 {
 
@@ -30,7 +39,8 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         System.loadLibrary("sift-test");
     }
 
-    Mat mRgba, mRgbaF, mRgbaT;
+    Mat mRgba, mRgbaF, mRgbaT, mGray, mRefImg;
+    private Bitmap bitmapOrig = null;
     private CameraBridgeViewBase cameraBridgeViewBase;
     private ImageView recognizedCard;
     private BaseLoaderCallback baseLoaderCallback = new BaseLoaderCallback(this) {
@@ -70,6 +80,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
     public void setNoTitle() {
         requestWindowFeature(Window.FEATURE_NO_TITLE);
     }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -78,16 +89,16 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         disableScreenTurnOff();
         setContentView(R.layout.show_camera);
 
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+        bitmapOrig = BitmapFactory.decodeResource(this.getResources(), R.drawable.ace_of_clubs,options);
+        mRefImg = new Mat(bitmapOrig.getHeight(), bitmapOrig.getWidth(), CvType.CV_8UC1);
+        Utils.bitmapToMat(bitmapOrig, mRefImg);
+
         cameraBridgeViewBase = (JavaCameraView) findViewById(R.id.cameraView);
-        recognizedCard = (ImageView) findViewById(R.id.imageView);
-        // Example of a call to a native method
-        runDemo();
-
-        TextView tv = (TextView) findViewById(R.id.textView);
-
         cameraBridgeViewBase.setVisibility(SurfaceView.VISIBLE);
         cameraBridgeViewBase.setCvCameraViewListener(this);
-
+        recognizedCard = (ImageView) findViewById(R.id.imageView);
         recognizedCard.setBackgroundResource(R.drawable.ace_of_clubs);
     }
 
@@ -135,6 +146,9 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         Core.transpose(mRgba, mRgbaT);
         Imgproc.resize(mRgbaT, mRgbaF, mRgbaF.size(), 0, 0, 0);
         Core.flip(mRgbaF, mRgba, 1);
+        mGray = inputFrame.gray();
+
+        findFeatures(mGray.getNativeObjAddr(), mRgba.getNativeObjAddr(), mRefImg.getNativeObjAddr());
         return mRgba;
     }
 
@@ -142,6 +156,6 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
      * A native method that is implemented by the 'sift-test' native library,
      * which is packaged with this application.
      */
-    public native void runDemo();
+    public native void findFeatures(long matAddrGray, long matAddrRgba, long matAddrRefImg);
 }
 
