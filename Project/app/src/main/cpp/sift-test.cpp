@@ -40,7 +40,7 @@ int run_demo()
 
     // Input and output image path.
     const char * imgInFile = "/src/main/res/drawable/ace_of_clubs_png";
-    const char * imgOutFile = "/sdcard/nonfree/img1_result.jpg";
+    const char * imgOutFile = "/sdcard0/nonfree/img1_result.jpg";
 
     Mat image;
     image = imread(imgInFile, CV_LOAD_IMAGE_COLOR);

@@ -3,24 +3,26 @@ package com.biro.zsolt.android.cardrecognizer;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.SurfaceView;
+import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
-import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.JavaCameraView;
-import org.opencv.android.OpenCVLoader;
 import org.opencv.android.LoaderCallbackInterface;
-import org.opencv.imgproc.Imgproc;
-import org.opencv.core.Mat;
-import org.opencv.core.CvType;
+import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Core;
+import org.opencv.core.CvType;
+import org.opencv.core.Mat;
+import org.opencv.imgproc.Imgproc;
 
 public class MainActivity extends AppCompatActivity implements CvCameraViewListener2 {
-    // Used to load the 'native-lib' library on application startup.
+
+    // Used to load the native libs on application startup.
     static {
         System.loadLibrary("opencv_java");
         System.loadLibrary("gnustl_shared");
@@ -37,8 +39,6 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
             switch (status) {
                 case LoaderCallbackInterface.SUCCESS: {
                     cameraBridgeViewBase.enableView();
-                    //System.loadLibrary("nonfree");
-                    //System.loadLibrary("sift-test");
                 }
                 break;
                 default: {
@@ -48,21 +48,42 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
             }
         }
     };
+    /**
+     * Avoid that the screen get's turned off by the system.
+     */
+    public void disableScreenTurnOff() {
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+    }
 
+    /**
+     * Maximize the application.
+     */
+    public void setFullscreen() {
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN);
+    }
+
+    /**
+     * Remove the title bar.
+     */
+    public void setNoTitle() {
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        setFullscreen();
+        setNoTitle();
+        disableScreenTurnOff();
         setContentView(R.layout.show_camera);
 
         cameraBridgeViewBase = (JavaCameraView) findViewById(R.id.cameraView);
         recognizedCard = (ImageView) findViewById(R.id.imageView);
-
+        // Example of a call to a native method
         runDemo();
 
-        // Example of a call to a native method
         TextView tv = (TextView) findViewById(R.id.textView);
-        //tv.setText(stringFromJNI());
 
         cameraBridgeViewBase.setVisibility(SurfaceView.VISIBLE);
         cameraBridgeViewBase.setCvCameraViewListener(this);
@@ -116,11 +137,11 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         Core.flip(mRgbaF, mRgba, 1);
         return mRgba;
     }
+
     /**
-     * A native method that is implemented by the 'native-lib' native library,
+     * A native method that is implemented by the 'sift-test' native library,
      * which is packaged with this application.
      */
-    public native String stringFromJNI();
     public native void runDemo();
 }
 
